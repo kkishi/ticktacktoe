@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+service TickTackToe {
+  rpc Game(stream Request) returns (stream Response) {}
+}
+
+message Player {
+  string id = 1;
+}
+
+message Cell {
+  int32 row = 1;
+  int32 col = 2;
+}
+
+message Request {
+  oneof event {
+    Player join = 1;
+    Cell mark = 2;
+  }
+}
+
+enum State {
+  UNKNOWN_STATE = 0;
+}
+
+message Response {
+  oneof event {
+    State turn = 1;
+    Cell marked = 2;
+  }
+}
