@@ -4,29 +4,43 @@ service TickTackToe {
   rpc Game(stream Request) returns (stream Response) {}
 }
 
-message Player {
-  string id = 1;
+message Join {
+  string name = 1;
 }
 
-message Cell {
+message Move {
   int32 row = 1;
   int32 col = 2;
 }
 
 message Request {
   oneof event {
-    Player join = 1;
-    Cell mark = 2;
+    Join join = 1;
+    Move move = 2;
   }
 }
 
-enum State {
-  UNKNOWN_STATE = 0;
+message Message {
+  string text = 1;
+}
+
+message MakeMove {
+  // initial indicates whether this is an initial move. In that case there's no
+  // previous opponent's move.
+  bool initial = 1;
+  Move opponent = 2;
+}
+
+message Finish {
+  bool error = 1;
+  bool win = 2;
 }
 
 message Response {
   oneof event {
-    State turn = 1;
-    Cell marked = 2;
+    Message info  = 1;
+    Message error = 2;
+    MakeMove make_move = 3;
+    Finish finish = 4;
   }
 }

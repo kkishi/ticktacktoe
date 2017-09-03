@@ -25,8 +25,8 @@ func main() {
 	for {
 		req := &tpb.Request{
 			Event: &tpb.Request_Join{
-				Join: &tpb.Player{
-					Id: "hello",
+				Join: &tpb.Join{
+					Name: "Tick",
 				},
 			},
 		}

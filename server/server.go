@@ -1,27 +1,31 @@
 package server
 
 import (
-	"io"
-	"log"
+	"sync"
+
+	"github.com/kkishi/ticktacktoe/game"
 
 	tpb "github.com/kkishi/ticktacktoe/proto/ticktacktoe_proto"
 )
 
-type Impl struct{}
+type Impl struct {
+	games      []*game.Game
+	gamesMutex sync.Mutex
+}
 
 func (i *Impl) Game(stream tpb.TickTackToe_GameServer) error {
-	for {
-		in, err := stream.Recv()
-		if err == io.EOF {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		log.Printf("in: %v\n", in)
-		res := &tpb.Response{}
-		if err := stream.Send(res); err != nil {
-			return err
+	i.gamesMutex.Lock()
+	defer i.gamesMutex.Unlock()
+	var g *game.Game
+	for _, ga := range i.games {
+		if ga.Waiting() {
+			g = ga
+			break
 		}
 	}
+	if g == nil {
+		g = game.New()
+	}
+	g.Join(stream)
+	return nil
 }

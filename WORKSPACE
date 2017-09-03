@@ -4,7 +4,7 @@ git_repository(
     remote = "https://github.com/bazelbuild/rules_go.git",
     tag = "0.5.3",
 )
-load("@io_bazel_rules_go//go:def.bzl", "go_repositories")
+load("@io_bazel_rules_go//go:def.bzl", "go_repositories", "go_repository")
 
 go_repositories()
 
@@ -40,4 +40,10 @@ http_archive(
     urls = ["https://github.com/google/protobuf/archive/82809aaebf24fca3c2d5611149c78a3625bd3b70.zip"],
     strip_prefix = "protobuf-82809aaebf24fca3c2d5611149c78a3625bd3b70",
     sha256 = "75105f312cefd8aa5e0bdf29279dc8ef0a6f862362b321d35b1ed5c08ce2ecfb",
+)
+
+go_repository(
+    name = "com_github_golang_mock",
+    importpath = "github.com/golang/mock",
+    tag = "v1.0.0",
 )

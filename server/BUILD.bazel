@@ -4,7 +4,10 @@ go_library(
     name = "go_default_library",
     srcs = ["server.go"],
     visibility = ["//visibility:public"],
-    deps = ["//proto/ticktacktoe_proto:go_default_library"],
+    deps = [
+        "//game:go_default_library",
+        "//proto/ticktacktoe_proto:go_default_library",
+    ],
 )
 
 go_test(
