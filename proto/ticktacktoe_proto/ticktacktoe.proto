@@ -34,6 +34,7 @@ message MakeMove {
 message Finish {
   bool error = 1;
   bool win = 2;
+  Move opponent = 3;
 }
 
 message Response {
