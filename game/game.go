@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sync"
 
 	tpb "github.com/kkishi/ticktacktoe/proto/ticktacktoe_proto"
 )
@@ -91,10 +92,16 @@ type Game struct {
 	State   GameState
 	Streams []tpb.TickTackToe_GameServer
 	Names   []string
+
+	// The server thrad for PlayerA should wait on this condition. For PlayerB
+	// the thread should call Game.Start.
+	Cond *sync.Cond
 }
 
 func New() *Game {
-	g := &Game{}
+	g := &Game{
+		Cond: sync.NewCond(new(sync.Mutex)),
+	}
 	g.State = &setupState{
 		player: PlayerA,
 		game:   g,
@@ -103,6 +110,7 @@ func New() *Game {
 }
 
 func (g *Game) Start() {
+	log.Print("game started")
 	for {
 		if err := g.State.Handle(); err == ErrGameIsFinished {
 			g.Finish()
@@ -112,6 +120,7 @@ func (g *Game) Start() {
 			break
 		}
 	}
+	g.Cond.Broadcast()
 }
 
 func (g *Game) Waiting() bool {

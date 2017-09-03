@@ -17,6 +17,7 @@ import (
 var name = flag.String("name", "", "Name of the player")
 
 func main() {
+	flag.Parse()
 	if *name == "" {
 		log.Fatal("--name is required")
 	}
@@ -40,6 +41,7 @@ func main() {
 	if err := g.Join(*name); err != nil {
 		log.Fatalf("failed to join a game; %v", err)
 	}
+	log.Print("joined to a game")
 
 	for {
 		if err := g.Wait(); err == client.ErrGameIsFinished {
@@ -53,11 +55,12 @@ func main() {
 			}
 			return
 		} else if err != nil {
-			log.Fatal("game finished with an error")
+			log.Fatalf("game finished with an error; %v", err)
 		}
 		fmt.Printf("board:\n%s\n", g.Board.String())
 		var r, c int
 		for {
+			fmt.Print("> ")
 			if n, err := fmt.Scanf("%d %d", &r, &c); err == io.EOF {
 				return
 			} else if err == nil && n == 2 {
