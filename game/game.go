@@ -40,9 +40,7 @@ func (s *setupState) Handle() error {
 		}
 		if err := s.game.Streams[PlayerA.ToIndex()].Send(&tpb.Response{
 			Event: &tpb.Response_MakeMove{
-				MakeMove: &tpb.MakeMove{
-					Initial: true,
-				},
+				MakeMove: &tpb.MakeMove{},
 			},
 		}); err != nil {
 			return fmt.Errorf("error while sending make move response to player %v; %v", PlayerA, err)

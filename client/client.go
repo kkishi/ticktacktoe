@@ -66,8 +66,7 @@ func (g *Game) Wait() error {
 	if mm == nil {
 		return fmt.Errorf("expected make move response; got %v", r)
 	}
-	if !mm.GetInitial() {
-		m := mm.GetOpponent()
+	if m := mm.GetOpponent(); m != nil {
 		if err := g.Board.Take(int(m.GetRow()), int(m.GetCol()), Opponent); err != nil {
 			return fmt.Errorf("invalid move (%d, %d) returned from server; %v",
 				m.GetRow(), m.GetCol(), err)

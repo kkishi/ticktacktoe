@@ -25,10 +25,9 @@ message Message {
 }
 
 message MakeMove {
-  // initial indicates whether this is an initial move. In that case there's no
-  // previous opponent's move.
-  bool initial = 1;
-  Move opponent = 2;
+  // opponent indicates the opponent's last move. This is not set if this is the
+  // initial move and thus there's no previous opponent's move.
+  Move opponent = 1;
 }
 
 message Finish {

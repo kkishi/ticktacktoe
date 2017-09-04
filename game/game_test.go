@@ -31,9 +31,7 @@ func TestJoin(t *testing.T) {
 		}, (error)(nil)),
 		sa.EXPECT().Send(&tpb.Response{
 			Event: &tpb.Response_MakeMove{
-				MakeMove: &tpb.MakeMove{
-					Initial: true,
-				},
+				MakeMove: &tpb.MakeMove{},
 			},
 		}).Return((error)(nil)),
 		sa.EXPECT().Recv().Return(&tpb.Request{}, errors.New("invalid request")),
@@ -113,9 +111,7 @@ func TestMove(t *testing.T) {
 		}, (error)(nil)),
 		sa.EXPECT().Send(&tpb.Response{
 			Event: &tpb.Response_MakeMove{
-				MakeMove: &tpb.MakeMove{
-					Initial: true,
-				},
+				MakeMove: &tpb.MakeMove{},
 			},
 		}).Return((error)(nil)),
 		sa.EXPECT().Recv().Return(&tpb.Request{
@@ -259,7 +255,6 @@ func TestFinish(t *testing.T) {
 			calls[pi] = append(calls[pi], servers[pi].EXPECT().Send(&tpb.Response{
 				Event: &tpb.Response_MakeMove{
 					MakeMove: &tpb.MakeMove{
-						Initial:  lastMove == nil,
 						Opponent: lastMove,
 					},
 				},
