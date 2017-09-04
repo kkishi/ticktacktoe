@@ -50,13 +50,17 @@ func (g *Game) Wait() error {
 	}
 	if f := r.GetFinish(); f != nil {
 		g.Close()
+		log.Printf("game has finished; %v", f)
 		if f.GetError() {
 			return fmt.Errorf("game finished with an error")
 		}
-		m := f.GetOpponent()
-		if err := g.Board.Take(int(m.GetRow()), int(m.GetCol()), Opponent); err != nil {
-			return fmt.Errorf("invalid move (%d, %d) returned from server; %v",
-				m.GetRow(), m.GetCol(), err)
+		if !f.GetWin() {
+			// When losing a game, the opponent's last move is returned.
+			m := f.GetOpponent()
+			if err := g.Board.Take(int(m.GetRow()), int(m.GetCol()), Opponent); err != nil {
+				return fmt.Errorf("invalid move (%d, %d) returned from server; %v",
+					m.GetRow(), m.GetCol(), err)
+			}
 		}
 		return ErrGameIsFinished
 	}

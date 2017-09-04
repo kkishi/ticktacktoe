@@ -275,11 +275,15 @@ func TestFinish(t *testing.T) {
 		}
 
 		for i := 0; i < 2; i++ {
+			f := &tpb.Finish{}
+			if test.want == PlayerFromIndex(i) {
+				f.Win = true
+			} else {
+				f.Opponent = lastMove
+			}
 			calls[i] = append(calls[i], servers[i].EXPECT().Send(&tpb.Response{
 				Event: &tpb.Response_Finish{
-					Finish: &tpb.Finish{
-						Win: test.want == PlayerFromIndex(i),
-					},
+					Finish: f,
 				},
 			}).Return((error)(nil)))
 			gomock.InOrder(calls[i]...)

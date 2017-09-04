@@ -68,9 +68,27 @@ func (s *runningState) Handle() error {
 	if err := s.game.Board.Take(int(m.GetRow()), int(m.GetCol()), s.player); err != nil {
 		return fmt.Errorf("invalid move request (%d, %d) from player %v; %v", m.GetRow(), m.GetCol(), s.player, err)
 	}
-	log.Printf("player %v made move %v", s.player, r)
+	log.Printf("player %v made move (%d, %d)", s.player, m.GetRow(), m.GetCol())
 	log.Printf("Board: \n%s", s.game.Board.String())
-	if s.game.Board.WinningPlayer() != UnknownPlayer {
+	if p := s.game.Board.WinningPlayer(); p != UnknownPlayer {
+		log.Printf("player %v wins game", p)
+		// Notify clients that the game has finished.
+		for i, stream := range s.game.Streams {
+			f := &tpb.Finish{
+				Win: PlayerFromIndex(i) == p,
+			}
+			if PlayerFromIndex(i) != s.player {
+				f.Opponent = m
+			}
+			if err := stream.Send(&tpb.Response{
+				Event: &tpb.Response_Finish{
+					Finish: f,
+				},
+			}); err != nil {
+				// Not much we can do here; just log the fact.
+				log.Printf("error while sending a finish response to player %v; %v", PlayerFromIndex(i), err)
+			}
+		}
 		return ErrGameIsFinished
 	}
 	next := s.player.Next()
@@ -113,7 +131,6 @@ func (g *Game) Start() {
 	log.Print("game started")
 	for {
 		if err := g.State.Handle(); err == ErrGameIsFinished {
-			g.Finish()
 			break
 		} else if err != nil {
 			g.FinishWithError(err)
@@ -137,22 +154,6 @@ func (g *Game) FinishWithError(err error) {
 			Event: &tpb.Response_Finish{
 				Finish: &tpb.Finish{
 					Error: true,
-				},
-			},
-		}); err != nil {
-			// Not much we can do here; just log the fact.
-			log.Printf("error while sending an error finish response to player %v; %v", PlayerFromIndex(i), err)
-		}
-	}
-}
-
-func (g *Game) Finish() {
-	win := g.Board.WinningPlayer()
-	for i := 0; i < 2; i++ {
-		if err := g.Streams[i].Send(&tpb.Response{
-			Event: &tpb.Response_Finish{
-				Finish: &tpb.Finish{
-					Win: PlayerFromIndex(i) == win,
 				},
 			},
 		}); err != nil {
