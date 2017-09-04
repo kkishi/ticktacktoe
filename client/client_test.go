@@ -56,7 +56,7 @@ func TestWaitFinishWithError(t *testing.T) {
 		s.EXPECT().Recv().Return(&tpb.Response{
 			Event: &tpb.Response_Finish{
 				Finish: &tpb.Finish{
-					Error: true,
+					Result: tpb.Finish_ERROR,
 				},
 			},
 		}, (error)(nil)),

@@ -45,7 +45,11 @@ func main() {
 
 	for {
 		if err := g.Wait(); err == client.ErrGameIsFinished {
-			switch g.Board.WinningPlayer() {
+			finished, player := g.Board.Finished()
+			if !finished {
+				log.Fatal("game is not finished locally")
+			}
+			switch player {
 			case client.Self:
 				fmt.Println("you win the game")
 			case client.Opponent:
@@ -53,6 +57,7 @@ func main() {
 			case game.UnknownPlayer:
 				fmt.Println("game finished a draw")
 			}
+			fmt.Printf("final board:\n%s\n", g.Board.String())
 			return
 		} else if err != nil {
 			log.Fatalf("game finished with an error; %v", err)

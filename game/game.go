@@ -69,13 +69,22 @@ func (s *runningState) Handle() error {
 		return fmt.Errorf("invalid move request (%d, %d) from player %v; %v", m.GetRow(), m.GetCol(), s.player, err)
 	}
 	log.Printf("player %v made move (%d, %d)", s.player, m.GetRow(), m.GetCol())
-	log.Printf("Board: \n%s", s.game.Board.String())
-	if p := s.game.Board.WinningPlayer(); p != UnknownPlayer {
-		log.Printf("player %v wins game", p)
+	log.Printf("board: \n%s", s.game.Board.String())
+	if finished, winningPlayer := s.game.Board.Finished(); finished {
+		if winningPlayer == UnknownPlayer {
+			log.Print("draw")
+		} else {
+			log.Printf("player %v wins game", winningPlayer)
+		}
 		// Notify clients that the game has finished.
 		for i, stream := range s.game.Streams {
-			f := &tpb.Finish{
-				Win: PlayerFromIndex(i) == p,
+			f := &tpb.Finish{}
+			if winningPlayer == UnknownPlayer {
+				f.Result = tpb.Finish_DRAW
+			} else if PlayerFromIndex(i) == winningPlayer {
+				f.Result = tpb.Finish_WIN
+			} else {
+				f.Result = tpb.Finish_LOSE
 			}
 			if PlayerFromIndex(i) != s.player {
 				f.Opponent = m
@@ -153,7 +162,7 @@ func (g *Game) FinishWithError(err error) {
 		if err := g.Streams[i].Send(&tpb.Response{
 			Event: &tpb.Response_Finish{
 				Finish: &tpb.Finish{
-					Error: true,
+					Result: tpb.Finish_ERROR,
 				},
 			},
 		}); err != nil {

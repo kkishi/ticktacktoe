@@ -32,9 +32,15 @@ message MakeMove {
 }
 
 message Finish {
-  bool error = 1;
-  bool win = 2;
-  Move opponent = 3;
+  enum Result {
+    UNKNOWN_RESULTE = 0;
+    ERROR = 1;
+    WIN = 2;
+    LOSE = 3;
+    DRAW = 4;
+  };
+  Result result = 1;
+  Move opponent = 2;
 }
 
 message Response {

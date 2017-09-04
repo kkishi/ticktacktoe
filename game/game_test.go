@@ -40,7 +40,7 @@ func TestJoin(t *testing.T) {
 		sa.EXPECT().Send(&tpb.Response{
 			Event: &tpb.Response_Finish{
 				Finish: &tpb.Finish{
-					Error: true,
+					Result: tpb.Finish_ERROR,
 				},
 			},
 		}).Return((error)(nil)),
@@ -61,7 +61,7 @@ func TestJoin(t *testing.T) {
 		sb.EXPECT().Send(&tpb.Response{
 			Event: &tpb.Response_Finish{
 				Finish: &tpb.Finish{
-					Error: true,
+					Result: tpb.Finish_ERROR,
 				},
 			},
 		}).Return((error)(nil)),
@@ -139,7 +139,7 @@ func TestMove(t *testing.T) {
 		sa.EXPECT().Send(&tpb.Response{
 			Event: &tpb.Response_Finish{
 				Finish: &tpb.Finish{
-					Error: true,
+					Result: tpb.Finish_ERROR,
 				},
 			},
 		}).Return((error)(nil)),
@@ -178,7 +178,7 @@ func TestMove(t *testing.T) {
 		sb.EXPECT().Send(&tpb.Response{
 			Event: &tpb.Response_Finish{
 				Finish: &tpb.Finish{
-					Error: true,
+					Result: tpb.Finish_ERROR,
 				},
 			},
 		}).Return((error)(nil)),
@@ -213,6 +213,13 @@ func TestFinish(t *testing.T) {
 				{{2, 0}, {2, 1}, {2, 2}},
 			},
 			want: PlayerB,
+		},
+		{
+			moves: [][]*tpb.Move{
+				{{0, 0}, {0, 2}, {1, 1}, {1, 2}, {2, 1}},
+				{{0, 1}, {1, 0}, {2, 0}, {2, 2}},
+			},
+			want: UnknownPlayer,
 		},
 	}
 
@@ -276,9 +283,14 @@ func TestFinish(t *testing.T) {
 
 		for i := 0; i < 2; i++ {
 			f := &tpb.Finish{}
-			if test.want == PlayerFromIndex(i) {
-				f.Win = true
+			if test.want == UnknownPlayer {
+				f.Result = tpb.Finish_DRAW
+			} else if PlayerFromIndex(i) == test.want {
+				f.Result = tpb.Finish_WIN
 			} else {
+				f.Result = tpb.Finish_LOSE
+			}
+			if PlayerFromIndex(i) == player {
 				f.Opponent = lastMove
 			}
 			calls[i] = append(calls[i], servers[i].EXPECT().Send(&tpb.Response{
@@ -294,8 +306,10 @@ func TestFinish(t *testing.T) {
 		}
 		g.Start()
 
-		if got := g.Board.WinningPlayer(); got != test.want {
-			t.Errorf("WinningPlayer returned %v; want %v", got, test.want)
+		if finished, got := g.Board.Finished(); !finished {
+			t.Error("Finished returned that the game is not finished; expected finished")
+		} else if got != test.want {
+			t.Errorf("Finished returned %v as the winning player; want %v", got, test.want)
 		}
 
 		for i := 0; i < 2; i++ {

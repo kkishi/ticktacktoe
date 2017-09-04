@@ -38,14 +38,27 @@ func TestBoardTake(t *testing.T) {
 	}
 }
 
-func TestBoardWinningPlayer(t *testing.T) {
+func TestBoardFinished(t *testing.T) {
 	tests := []struct {
-		board *Board
-		want  Player
+		board        *Board
+		wantFinished bool
+		wantPlayer   Player
 	}{
 		{
-			board: &Board{},
-			want:  UnknownPlayer,
+			// Not finished
+			board:        &Board{},
+			wantFinished: false,
+			wantPlayer:   UnknownPlayer,
+		},
+		{
+			// Draw
+			board: &Board{
+				{PlayerA, PlayerB, PlayerA},
+				{PlayerB, PlayerA, PlayerA},
+				{PlayerB, PlayerA, PlayerB},
+			},
+			wantFinished: true,
+			wantPlayer:   UnknownPlayer,
 		},
 		{
 			// Horizontal
@@ -54,7 +67,8 @@ func TestBoardWinningPlayer(t *testing.T) {
 				{PlayerA, PlayerA, PlayerA},
 				{UnknownPlayer, PlayerB, UnknownPlayer},
 			},
-			want: PlayerA,
+			wantFinished: true,
+			wantPlayer:   PlayerA,
 		},
 		{
 			// Vertical
@@ -63,7 +77,8 @@ func TestBoardWinningPlayer(t *testing.T) {
 				{PlayerA, PlayerB, PlayerA},
 				{UnknownPlayer, PlayerB, UnknownPlayer},
 			},
-			want: PlayerB,
+			wantFinished: true,
+			wantPlayer:   PlayerB,
 		},
 		{
 			// Horizontal
@@ -72,7 +87,8 @@ func TestBoardWinningPlayer(t *testing.T) {
 				{PlayerA, PlayerA, PlayerA},
 				{UnknownPlayer, PlayerB, UnknownPlayer},
 			},
-			want: PlayerA,
+			wantFinished: true,
+			wantPlayer:   PlayerA,
 		},
 		{
 			// Diagonal
@@ -81,7 +97,8 @@ func TestBoardWinningPlayer(t *testing.T) {
 				{PlayerB, PlayerA, UnknownPlayer},
 				{PlayerA, UnknownPlayer, UnknownPlayer},
 			},
-			want: PlayerA,
+			wantFinished: true,
+			wantPlayer:   PlayerA,
 		},
 		{
 			// Diagonal
@@ -90,12 +107,15 @@ func TestBoardWinningPlayer(t *testing.T) {
 				{PlayerA, PlayerB, UnknownPlayer},
 				{UnknownPlayer, UnknownPlayer, PlayerB},
 			},
-			want: PlayerB,
+			wantFinished: true,
+			wantPlayer:   PlayerB,
 		},
 	}
 	for _, test := range tests {
-		if got := test.board.WinningPlayer(); got != test.want {
-			t.Errorf("WinningPlayer() returned %v; want %v", got, test.want)
+		gotFinished, gotPlayer := test.board.Finished()
+		if gotFinished != test.wantFinished || gotPlayer != test.wantPlayer {
+			t.Errorf("Finished returned (%t, %v); want (%t, %v)",
+				gotFinished, gotPlayer, test.wantFinished, test.wantPlayer)
 		}
 	}
 }
