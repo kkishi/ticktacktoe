@@ -5,8 +5,7 @@ import "google/api/annotations.proto";
 service TickTackToe {
   rpc Game(stream Request) returns (stream Response) {
     option (google.api.http) = {
-      post: "/v1/ttt"
-      body: "*"
+      get: "/ttt"
     };
   }
 }
