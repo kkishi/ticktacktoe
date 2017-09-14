@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/kkishi/ticktacktoe/game"
 	"github.com/kkishi/ticktacktoe/proto/mock_ticktacktoe_proto"
 
 	tpb "github.com/kkishi/ticktacktoe/proto/ticktacktoe_proto"
@@ -80,10 +81,7 @@ func TestWaitFinish(t *testing.T) {
 		s.EXPECT().Recv().Return(&tpb.Response{
 			Event: &tpb.Response_Finish{
 				Finish: &tpb.Finish{
-					Opponent: &tpb.Move{
-						Row: 1,
-						Col: 2,
-					},
+					Result: tpb.Finish_DRAW,
 				},
 			},
 		}, (error)(nil)),
@@ -91,9 +89,6 @@ func TestWaitFinish(t *testing.T) {
 	)
 	if err := g.Wait(); err != ErrGameIsFinished {
 		t.Errorf("got an error %v from Wait; want ErrGameIsFinished", err)
-	}
-	if got := g.Board[1][2]; got != Opponent {
-		t.Errorf("Board[1][2] is occupied by %v; want %v", got, Opponent)
 	}
 }
 
@@ -104,22 +99,28 @@ func TestWaitNotFinished(t *testing.T) {
 
 	g := NewGame(s)
 
-	s.EXPECT().Recv().Return(&tpb.Response{
-		Event: &tpb.Response_MakeMove{
-			MakeMove: &tpb.MakeMove{
-				Opponent: &tpb.Move{
-					Row: 1,
-					Col: 2,
+	gomock.InOrder(
+		s.EXPECT().Recv().Return(&tpb.Response{
+			Event: &tpb.Response_Update{
+				Update: &tpb.Update{
+					Row:    1,
+					Col:    2,
+					Player: tpb.Player_A,
 				},
 			},
-		},
-	}, (error)(nil))
+		}, (error)(nil)),
+		s.EXPECT().Recv().Return(&tpb.Response{
+			Event: &tpb.Response_MakeMove{
+				MakeMove: &tpb.MakeMove{},
+			},
+		}, (error)(nil)),
+	)
 
 	if err := g.Wait(); err != nil {
 		t.Errorf("got an error %v from Wait; want no error", err)
 	}
-	if got := g.Board[1][2]; got != Opponent {
-		t.Errorf("Board[1][2] is occupied by %v; want %v", got, Opponent)
+	if got := g.Board.Grid[1][2]; got != game.PlayerA {
+		t.Errorf("Board.Grid[1][2] is occupied by %v; want %v", got, game.PlayerA)
 	}
 }
 
@@ -145,8 +146,5 @@ func TestMakeMove(t *testing.T) {
 
 	if err := g.MakeMove(2, 1); err != nil {
 		t.Errorf("got an error %v from MakeMove; want no error", err)
-	}
-	if got := g.Board[2][1]; got != Self {
-		t.Errorf("Board[2][1] is occupied by %v; want %v", got, Self)
 	}
 }

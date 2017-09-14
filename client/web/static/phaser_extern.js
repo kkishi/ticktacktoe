@@ -30,7 +30,11 @@ Phaser.CANVAS;
 
 /**
  * @constructor
- * @externs
+ *
+ * HACK: Ideally this should also have @externs annotation, but that causes a
+ * compiler warning because Closure compiler somehow removes this type
+ * information before type checking, seemingly because Point is only used in a
+ * function signature type assertion.
  */
 function Point() {}
 Point.prototype.x;

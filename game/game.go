@@ -64,7 +64,7 @@ func (s *runningState) Handle() error {
 		return fmt.Errorf("expected a move request from player %v; got %v", s.player, r)
 	}
 	if err := s.game.Board.Take(int(m.GetRow()), int(m.GetCol()), s.player); err != nil {
-		return fmt.Errorf("invalid move request (%d, %d) from player %v; %v", m.GetRow(), m.GetCol(), s.player, err)
+		return fmt.Errorf("error while taking cell (%d, %d) for player %v; %v", m.GetRow(), m.GetCol(), s.player, err)
 	}
 	log.Printf("player %v made move (%d, %d)", s.player, m.GetRow(), m.GetCol())
 	log.Printf("board: \n%s", s.game.Board.String())
@@ -76,20 +76,19 @@ func (s *runningState) Handle() error {
 		}
 		// Notify clients that the game has finished.
 		for i, stream := range s.game.Streams {
-			f := &tpb.Finish{}
+			var r tpb.Finish_Result
 			if winningPlayer == UnknownPlayer {
-				f.Result = tpb.Finish_DRAW
+				r = tpb.Finish_DRAW
 			} else if PlayerFromIndex(i) == winningPlayer {
-				f.Result = tpb.Finish_WIN
+				r = tpb.Finish_WIN
 			} else {
-				f.Result = tpb.Finish_LOSE
-			}
-			if PlayerFromIndex(i) != s.player {
-				f.Opponent = m
+				r = tpb.Finish_LOSE
 			}
 			if err := stream.Send(&tpb.Response{
 				Event: &tpb.Response_Finish{
-					Finish: f,
+					Finish: &tpb.Finish{
+						Result: r,
+					},
 				},
 			}); err != nil {
 				// Not much we can do here; just log the fact.
@@ -101,9 +100,7 @@ func (s *runningState) Handle() error {
 	next := s.player.Next()
 	if err := s.game.Streams[next.ToIndex()].Send(&tpb.Response{
 		Event: &tpb.Response_MakeMove{
-			MakeMove: &tpb.MakeMove{
-				Opponent: m,
-			},
+			MakeMove: &tpb.MakeMove{},
 		},
 	}); err != nil {
 		return fmt.Errorf("error while sending make move response to player %v; %v", next, err)
@@ -151,8 +148,30 @@ func (g *Game) Waiting() bool {
 	return len(g.Streams) < 2
 }
 
+type boardObserver struct {
+	stream tpb.TickTackToe_GameServer
+}
+
+func (o *boardObserver) NotifyUpdate(row, col int, player Player) error {
+	if err := o.stream.Send(&tpb.Response{
+		Event: &tpb.Response_Update{
+			&tpb.Update{
+				Row:    int32(row),
+				Col:    int32(col),
+				Player: tpb.Player(player),
+			},
+		},
+	}); err != nil {
+		return fmt.Errorf("error while notifying an update: %v", err)
+	}
+	return nil
+}
+
 func (g *Game) Join(stream tpb.TickTackToe_GameServer) {
 	g.Streams = append(g.Streams, stream)
+	g.Board.AddObserver(&boardObserver{
+		stream: stream,
+	})
 }
 
 func (g *Game) FinishWithError(err error) {

@@ -31,9 +31,6 @@ message Message {
 }
 
 message MakeMove {
-  // opponent indicates the opponent's last move. This is not set if this is the
-  // initial move and thus there's no previous opponent's move.
-  Move opponent = 1;
 }
 
 message Finish {
@@ -45,7 +42,18 @@ message Finish {
     DRAW = 4;
   };
   Result result = 1;
-  Move opponent = 2;
+}
+
+enum Player {
+  UNKNOWN_PLAYER = 0;
+  A = 1;
+  B = 2;
+};
+
+message Update {
+  int32 row = 1;
+  int32 col = 2;
+  Player player = 3;
 }
 
 message Response {
@@ -53,6 +61,7 @@ message Response {
     Message info  = 1;
     Message error = 2;
     MakeMove make_move = 3;
-    Finish finish = 4;
+    Update update = 4;
+    Finish finish = 5;
   }
 }

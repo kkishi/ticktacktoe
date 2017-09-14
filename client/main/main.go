@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/kkishi/ticktacktoe/client"
-	"github.com/kkishi/ticktacktoe/game"
 	tpb "github.com/kkishi/ticktacktoe/proto/ticktacktoe_proto"
 )
 
@@ -49,15 +48,7 @@ func main() {
 			if !finished {
 				log.Fatal("game is not finished locally")
 			}
-			switch player {
-			case client.Self:
-				fmt.Println("you win the game")
-			case client.Opponent:
-				fmt.Println("you lost the game")
-			case game.UnknownPlayer:
-				fmt.Println("game finished a draw")
-			}
-			fmt.Printf("final board:\n%s\n", g.Board.String())
+			fmt.Printf("Player %v wins. final board:\n%s\n", player, g.Board.String())
 			return
 		} else if err != nil {
 			log.Fatalf("game finished with an error; %v", err)

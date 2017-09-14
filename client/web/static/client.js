@@ -1,6 +1,7 @@
 goog.require('goog.crypt.base64');
 goog.require('proto.Join');
 goog.require('proto.Move');
+goog.require('proto.Player');
 goog.require('proto.Request');
 goog.require('proto.Response');
 
@@ -33,14 +34,19 @@ function TickTackToe() {
   this.state = TickTackToe.State.SETUP;
 }
 
-TickTackToe.Colors = [
-  'blue',
-  'red'
-];
-
-TickTackToe.Players = {
-  SELF: 0,
-  OPPONENT: 1
+/**
+ * @param {proto.Player} player
+ * @return {string}
+ */
+TickTackToe.Colors = function(player) {
+  if (player == proto.Player.A) {
+    return 'blue';
+  }
+  if (player == proto.Player.B) {
+    return 'red';
+  }
+  console.log('unknown player value', player);
+  return 'black';
 };
 
 TickTackToe.State = {
@@ -107,7 +113,14 @@ TickTackToe.prototype.onDown = function(pointer) {
     console.log('can not take the cell');
     return;
   }
-  this.take(row, col, TickTackToe.Players.SELF);
+  var m = new proto.Move;
+  m.setRow(row);
+  m.setCol(col);
+  var r = new proto.Request;
+  r.setMove(m);
+  var b = goog.crypt.base64.encodeByteArray(r.serializeBinary());
+  this.connection.send(b);
+  this.state = TickTackToe.State.WAIT_MOVE;
 };
 
 /**
@@ -122,22 +135,11 @@ TickTackToe.prototype.canTake = function(row, col) {
 /**
  * @param {number} row
  * @param {number} col
- * @param {number} player
+ * @param {proto.Player} player
  */
-TickTackToe.prototype.take = function(row, col, player) {
+TickTackToe.prototype.update = function(row, col, player) {
   this.taken[row][col] = true;
-  this.mark(row, col, TickTackToe.Colors[player]);
-  if (player == TickTackToe.Players.OPPONENT) {
-    return;
-  }
-  var m = new proto.Move;
-  m.setRow(row);
-  m.setCol(col);
-  var r = new proto.Request;
-  r.setMove(m);
-  var b = goog.crypt.base64.encodeByteArray(r.serializeBinary());
-  this.connection.send(b);
-  this.state = TickTackToe.State.WAIT_MOVE;
+  this.mark(row, col, TickTackToe.Colors(player));
 };
 
 /**
@@ -167,29 +169,27 @@ TickTackToe.prototype.socketError = function(error) {
  * @param {Object} e
  */
 TickTackToe.prototype.socketOnmessage = function(e) {
-  var u = goog.crypt.base64.decodeStringToUint8Array(e.data);
-  var r = proto.Response.deserializeBinary(u.buffer);
-  console.log("response", e.data, u, r.toString());
+  var b = goog.crypt.base64.decodeStringToUint8Array(e.data);
+  var r = proto.Response.deserializeBinary(b.buffer);
+  console.log("response", e.data, b, r.toString());
   var f = r.getFinish();
   if (f) {
-    var o = f.getOpponent();
-    if (o) {
-      this.take(o.getRow(), o.getCol(), TickTackToe.Players.OPPONENT);
-    }
     this.state = TickTackToe.State.FINISHED;
     this.connection.close();
     console.log("finished", f.getResult().toString());
     return;
   }
+  var u = r.getUpdate();
+  if (u) {
+    this.update(u.getRow(), u.getCol(), u.getPlayer());
+    console.log("cell taken", u.getRow(), u.getCol(), u.getPlayer());
+    return;
+  }
   var mm = r.getMakeMove();
   if (mm) {
-    var o = mm.getOpponent();
-    if (o) {
-      this.take(o.getRow(), o.getCol(), TickTackToe.Players.OPPONENT);
-      console.log("opponent took", o.getRow(), o.getCol());
-    }
+    this.state = TickTackToe.State.MAKE_MOVE;
+    return;
   }
-  this.state = TickTackToe.State.MAKE_MOVE;
 };
 
 (function() {
