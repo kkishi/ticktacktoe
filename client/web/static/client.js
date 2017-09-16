@@ -171,7 +171,7 @@ TickTackToe.prototype.socketError = function(error) {
 TickTackToe.prototype.socketOnmessage = function(e) {
   var b = goog.crypt.base64.decodeStringToUint8Array(e.data);
   var r = proto.Response.deserializeBinary(b.buffer);
-  console.log("response", e.data, b, r.toString());
+  console.log("response", e.data, b, r.toString(), r.toObject());
   var f = r.getFinish();
   if (f) {
     this.state = TickTackToe.State.FINISHED;
