@@ -12,8 +12,18 @@ closure_js_library(
     srcs = ["client.js"],
     deps = [
         "//proto:ticktacktoe_proto",
+        ":board",
         ":phaser_extern",
         "@io_bazel_rules_closure//closure/library",
+    ],
+)
+
+closure_js_library(
+    name = "board",
+    srcs = ["board.js"],
+    deps = [
+        "//proto:ticktacktoe_proto",
+        ":phaser_extern",
     ],
 )
 

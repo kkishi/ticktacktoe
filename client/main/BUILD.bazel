@@ -6,7 +6,6 @@ go_library(
     visibility = ["//visibility:private"],
     deps = [
         "//client:go_default_library",
-        "//game:go_default_library",
         "//proto/ticktacktoe_proto:go_default_library",
         "@org_golang_google_grpc//:go_default_library",
     ],

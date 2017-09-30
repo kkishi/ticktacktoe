@@ -1,9 +1,9 @@
 goog.require('goog.crypt.base64');
 goog.require('proto.Join');
 goog.require('proto.Move');
-goog.require('proto.Player');
 goog.require('proto.Request');
 goog.require('proto.Response');
+goog.require('ticktacktoe.Board');
 
 /**
  * @constructor
@@ -17,12 +17,8 @@ function TickTackToe() {
     // TODO: Switch to AUTO. Painting bitmap somehow doesn't work with WebGL.
     Phaser.CANVAS,
     'phaser-game',
-    { create: this.phaserCreate.bind(this) });
-  this.taken = [
-    [false, false, false],
-    [false, false, false],
-    [false, false, false],
-  ];
+    { create: this.onPhaserCreate.bind(this) });
+  this.board = new ticktacktoe.Board(this.game, this.cellSize);
 
   // Set up WebSocket.
   this.connection = new WebSocket(
@@ -34,21 +30,6 @@ function TickTackToe() {
   this.state = TickTackToe.State.SETUP;
 }
 
-/**
- * @param {proto.Player} player
- * @return {string}
- */
-TickTackToe.Colors = function(player) {
-  if (player == proto.Player.A) {
-    return 'blue';
-  }
-  if (player == proto.Player.B) {
-    return 'red';
-  }
-  console.log('unknown player value', player);
-  return 'black';
-};
-
 TickTackToe.State = {
   UNKNOWN: 0,
   SETUP: 1,
@@ -58,48 +39,21 @@ TickTackToe.State = {
 };
 
 /**
- * void
+ * @return {void}
  */
-TickTackToe.prototype.phaserCreate = function() {
+TickTackToe.prototype.onPhaserCreate = function() {
   this.game.stage.backgroundColor = '#ffffff';
-
-  // Add a grid board to the UI.
-  this.game.create.grid('board',
-                        this.cellSize * 3 + 1,
-                        this.cellSize * 3 + 1,
-                        this.cellSize,
-                        this.cellSize,
-                        '#000000');
-  this.game.add.sprite(0, 0, 'board');
 
   // Register mouse events.
   this.game.input.mouse.capture = true;
   this.game.input.onDown.add(this.onDown.bind(this));
 
-  // Setup bitmap, used for marking the board.
-  this.canvas = this.game.make.bitmapData(this.cellSize * 3,
-                                          this.cellSize * 3);
-  this.canvas.addToWorld(0, 0);
-};
-
-/**
- * @param {number} row
- * @param {number} col
- * @param {string} color
- */
-TickTackToe.prototype.mark = function(row, col, color) {
-  this.canvas.circle((col + 0.5) * this.cellSize,
-                     (row + 0.5) * this.cellSize,
-                     0.4 * this.cellSize,
-                     color);
-  this.canvas.circle((col + 0.5) * this.cellSize,
-                     (row + 0.5) * this.cellSize,
-                     0.35 * this.cellSize,
-                     '#ffffff');
+  this.board.onPhaserCreate();
 };
 
 /**
  * @param {Point} pointer
+ * @return {void}
  */
 TickTackToe.prototype.onDown = function(pointer) {
   var row = Math.floor(pointer.y / this.cellSize);
@@ -109,7 +63,7 @@ TickTackToe.prototype.onDown = function(pointer) {
     console.log('not read to take; state', this.state);
     return;
   }
-  if (!this.canTake(row, col)) {
+  if (!this.board.canTake(row, col)) {
     console.log('can not take the cell');
     return;
   }
@@ -124,26 +78,7 @@ TickTackToe.prototype.onDown = function(pointer) {
 };
 
 /**
- * @param {number} row
- * @param {number} col
- * @return {boolean}
- */
-TickTackToe.prototype.canTake = function(row, col) {
-  return !this.taken[row][col];
-};
-
-/**
- * @param {number} row
- * @param {number} col
- * @param {proto.Player} player
- */
-TickTackToe.prototype.update = function(row, col, player) {
-  this.taken[row][col] = true;
-  this.mark(row, col, TickTackToe.Colors(player));
-};
-
-/**
- * void
+ * @return {void}
  */
 TickTackToe.prototype.socketOnopen = function() {
   var j = new proto.Join;
@@ -181,7 +116,7 @@ TickTackToe.prototype.socketOnmessage = function(e) {
   }
   var u = r.getUpdate();
   if (u) {
-    this.update(u.getRow(), u.getCol(), u.getPlayer());
+    this.board.update(u.getRow(), u.getCol(), u.getPlayer());
     console.log("cell taken", u.getRow(), u.getCol(), u.getPlayer());
     return;
   }
