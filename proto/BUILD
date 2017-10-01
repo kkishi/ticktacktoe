@@ -10,12 +10,6 @@ proto_language(
     name = "closure_grpc",
     output_to_library = True,
     pb_file_extensions = [".js"],
-    pb_options = [
-        "import_style=closure",
-        "error_on_name_conflict",
-        "binary",
-    ],
-    pb_plugin_name = "js",
     pb_imports = [
         "external/com_google_protobuf/src/",
         "external/com_github_grpc_ecosystem_grpc_gateway_googleapis/",
@@ -24,13 +18,19 @@ proto_language(
         "@com_google_protobuf//:well_known_protos",
         "@com_github_grpc_ecosystem_grpc_gateway_googleapis//:annotations_protos",
     ],
+    pb_options = [
+        "import_style=closure",
+        "error_on_name_conflict",
+        "binary",
+    ],
+    pb_plugin_name = "js",
 )
 
 load("@org_pubref_rules_protobuf//closure:rules.bzl", "closure_proto_library")
 
 closure_proto_library(
-    langs = [":closure_grpc"],
     name = "ticktacktoe_proto",
+    langs = [":closure_grpc"],
     protos = ["//proto/ticktacktoe_proto:ticktacktoe.proto"],
     visibility = ["//visibility:public"],
 )
