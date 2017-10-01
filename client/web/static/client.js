@@ -16,13 +16,13 @@ function TickTackToe() {
     this.cellSize * 3 + 1,
     // TODO: Switch to AUTO. Painting bitmap somehow doesn't work with WebGL.
     Phaser.CANVAS,
-    'phaser-game',
+    'game-container',
     { create: this.onPhaserCreate.bind(this) });
   this.board = new ticktacktoe.Board(this.game, this.cellSize);
 
   // Set up WebSocket.
   this.connection = new WebSocket(
-    'ws://' + location.host.replace(":8081", ":8080") + "/ttt");
+    'ws://' + location.host.replace(':8081', ':8080') + '/ttt');
   this.connection.onopen = this.socketOnopen.bind(this);
   this.connection.error = this.socketError.bind(this);
   this.connection.onmessage = this.socketOnmessage.bind(this);
@@ -30,6 +30,9 @@ function TickTackToe() {
   this.state = TickTackToe.State.SETUP;
 }
 
+/**
+ * @enum {number}
+ */
 TickTackToe.State = {
   UNKNOWN: 0,
   SETUP: 1,
@@ -82,12 +85,12 @@ TickTackToe.prototype.onDown = function(pointer) {
  */
 TickTackToe.prototype.socketOnopen = function() {
   var j = new proto.Join;
-  j.setName("Tick");
+  j.setName('Tick');
   var r = new proto.Request;
   r.setJoin(j);
   var s = r.serializeBinary();
   var b = goog.crypt.base64.encodeByteArray(s);
-  console.log("request", r.toString(), s, b);
+  console.log('request', r.toString(), s, b);
   this.connection.send(b);
 };
 
@@ -106,18 +109,18 @@ TickTackToe.prototype.socketError = function(error) {
 TickTackToe.prototype.socketOnmessage = function(e) {
   var b = goog.crypt.base64.decodeStringToUint8Array(e.data);
   var r = proto.Response.deserializeBinary(b.buffer);
-  console.log("response", e.data, b, r.toString(), r.toObject());
+  console.log('response', e.data, b, r.toString(), r.toObject());
   var f = r.getFinish();
   if (f) {
     this.state = TickTackToe.State.FINISHED;
     this.connection.close();
-    console.log("finished", f.getResult().toString());
+    console.log('finished', f.getResult().toString());
     return;
   }
   var u = r.getUpdate();
   if (u) {
     this.board.update(u.getRow(), u.getCol(), u.getPlayer());
-    console.log("cell taken", u.getRow(), u.getCol(), u.getPlayer());
+    console.log('cell taken', u.getRow(), u.getCol(), u.getPlayer());
     return;
   }
   var mm = r.getMakeMove();

@@ -4,6 +4,7 @@ closure_js_binary(
     name = "ttt",
     deps = [
         ":client",
+        ":debug_console",
     ],
 )
 
@@ -25,6 +26,11 @@ closure_js_library(
         "//proto:ticktacktoe_proto",
         ":phaser_extern",
     ],
+)
+
+closure_js_library(
+    name = "debug_console",
+    srcs = ["debug_console.js"],
 )
 
 closure_js_library(
