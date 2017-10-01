@@ -35,9 +35,7 @@ function TickTackToe() {
   this.state = TickTackToe.State.SETUP;
 }
 
-/**
- * @enum {number}
- */
+/** @enum {number} */
 TickTackToe.State = {
   UNKNOWN: 0,
   SETUP: 1,
@@ -46,9 +44,7 @@ TickTackToe.State = {
   FINISHED: 4
 };
 
-/**
- * @return {void}
- */
+/** @return {void} */
 TickTackToe.prototype.onPhaserCreate = function() {
   this.game.stage.backgroundColor = '#ffffff';
 
@@ -59,10 +55,7 @@ TickTackToe.prototype.onPhaserCreate = function() {
   this.board.onPhaserCreate();
 };
 
-/**
- * @param {!Point} pointer
- * @return {void}
- */
+/** @param {!Point} pointer */
 TickTackToe.prototype.onDown = function(pointer) {
   var row = Math.floor(pointer.y / this.cellSize);
   var col = Math.floor(pointer.x / this.cellSize);
@@ -85,9 +78,7 @@ TickTackToe.prototype.onDown = function(pointer) {
   this.state = TickTackToe.State.WAIT_MOVE;
 };
 
-/**
- * @return {void}
- */
+/** @return {void} */
 TickTackToe.prototype.socketOnopen = function() {
   var j = new proto.Join;
   j.setName('Tick');
@@ -99,9 +90,7 @@ TickTackToe.prototype.socketOnopen = function() {
   this.connection.send(b);
 };
 
-/**
- * @param {string} error
- */
+/** @param {string} error */
 TickTackToe.prototype.socketError = function(error) {
   console.log('websocket error: ' + error);
   this.connection.close();
@@ -110,6 +99,7 @@ TickTackToe.prototype.socketError = function(error) {
 
 /**
  * MessageEvent type is taken from: https://github.com/google/closure-compiler/blob/2d3da6764e331d72ec347a620251e12e63c15a6e/externs/browser/html5.js
+ *
  * @param {!MessageEvent<string>} e
  */
 TickTackToe.prototype.socketOnmessage = function(e) {

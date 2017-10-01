@@ -34,10 +34,7 @@ ticktacktoe.Board.color = function(player) {
   return 'black';
 };
 
-/**
- * @this {ticktacktoe.Board}
- * @return {void}
- */
+/** @return {void} */
 ticktacktoe.Board.prototype.onPhaserCreate = function() {
   // Add a grid board to the UI.
   this.game.create.grid('board',
@@ -67,7 +64,6 @@ ticktacktoe.Board.prototype.canTake = function(row, col) {
  * @param {number} row
  * @param {number} col
  * @param {proto.Player} player
- * @return {void}
  */
 ticktacktoe.Board.prototype.update = function(row, col, player) {
   this.cells[row][col] = true;
@@ -79,7 +75,6 @@ ticktacktoe.Board.prototype.update = function(row, col, player) {
  * @param {number} row
  * @param {number} col
  * @param {string} color
- * @return {void}
  */
 ticktacktoe.Board.prototype.mark = function(row, col, color) {
   this.canvas.circle((col + 0.5) * this.cellSize,
