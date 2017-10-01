@@ -1,41 +1,97 @@
 /**
+ * @fileoverview Externs file for Phaser.
  * @externs
- * @record
  */
-var Phaser = {}
 
 /**
- * @constructor
+ * @type {Object}
+ * @const
  */
-Phaser.Game = function(a, b, c, d, e) {}
-Phaser.Game.prototype.game.add.sprite;
-Phaser.Game.prototype.game.add;
-Phaser.Game.prototype.game.create;
-Phaser.Game.prototype.game.grid;
-Phaser.Game.prototype.game.input.mouse.capture;
-Phaser.Game.prototype.game.input.mouse;
-Phaser.Game.prototype.game.input.onDown.add;
-Phaser.Game.prototype.game.input.onDown;
-Phaser.Game.prototype.game.input;
-Phaser.Game.prototype.game.make.bitmapData = function() {};
-Phaser.Game.prototype.game.make.bitmapData.prototype.addToWorld;
-Phaser.Game.prototype.game.make.bitmapData.prototype.circle;
-Phaser.Game.prototype.game.make;
-Phaser.Game.prototype.game.stage.backgroundColor;
-Phaser.Game.prototype.game.stage;
-Phaser.Game.prototype.game;
+var Phaser;
 
+/** @constructor */
+Phaser.Game = function(a, b, c, d, e) {
+  /** @type {Phaser.GameObjectFactory} */
+  this.add;
+
+  /** @type {Phaser.Create} */
+  this.create;
+
+  /** @type {Phaser.Input} */
+  this.input;
+
+  /** @type {Phaser.GameObjectCreator} */
+  this.make;
+
+  /** @type {Phaser.Stage} */
+  this.stage;
+}
+
+/** @constructor */
+Phaser.GameObjectFactory = function() {};
+
+/** @return {void} */
+Phaser.GameObjectFactory.prototype.sprite = function(a, b, c) {};
+
+/** @constructor */
+Phaser.Create = function() {}
+
+/** @return {void} */
+Phaser.Create.prototype.grid = function(a, b, c, d, e, f) {};
+
+/** @constructor */
+Phaser.Input = function() {
+  /** @type {Phaser.Mouse} */
+  this.mouse;
+
+  /** @type {Phaser.Signal} */
+  this.onDown;
+}
+
+/** @constructor */
+Phaser.GameObjectCreator = function() {};
+
+/** @return {Phaser.BitmapData} */
+Phaser.GameObjectCreator.prototype.bitmapData = function(a, b) {};
+
+/** @constructor */
+Phaser.BitmapData = function() {};
+
+/** @return {void} */
+Phaser.BitmapData.prototype.addToWorld = function(a, b) {};
+
+/** @return {void} */
+Phaser.BitmapData.prototype.circle = function(a, b, c, d) {};
+
+/** @constructor */
+Phaser.Stage = function() {
+  /** @type {string} */
+  this.backgroundColor;
+};
+
+/** @constructor */
+Phaser.Mouse = function() {};
+
+/** @type {boolean} */
+Phaser.Mouse.prototype.capture;
+
+/** @constructor */
+Phaser.Signal = function() {};
+
+/** @return {void} */
+Phaser.Signal.prototype.add = function(a) {};
+
+/** @type {number} */
 Phaser.AUTO;
+
+/** @type {number} */
 Phaser.CANVAS;
 
-/**
- * @constructor
- *
- * HACK: Ideally this should also have @externs annotation, but that causes a
- * compiler warning because Closure compiler somehow removes this type
- * information before type checking, seemingly because Point is only used in a
- * function signature type assertion.
- */
-function Point() {}
-Point.prototype.x;
-Point.prototype.y;
+/** @constructor */
+function Point() {
+  /** @type {number} */
+  this.x;
+
+  /** @type {number} */
+  this.y;
+}

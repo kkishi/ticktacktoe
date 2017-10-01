@@ -1,5 +1,10 @@
 (function() {
   var l = window.console.log;
+
+  /**
+   * Console type is from https://github.com/google/closure-compiler/blob/b85c29855a714cae446f61c8a7b2ccaac747722b/externs/browser/webkit_dom.js
+   * @this {Console}
+   */
   window.console.log = function() {
     // Call the original log function.
     l.apply(this, arguments);

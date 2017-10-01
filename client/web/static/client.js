@@ -6,11 +6,15 @@ goog.require('proto.Response');
 goog.require('ticktacktoe.Board');
 
 /**
+ * HACK: Without the supression, the code is eliminated.
+ *
  * @constructor
+ * @suppress {missingProvide}
  */
 function TickTackToe() {
   // Set up Phaser.
   this.cellSize = 200;
+
   this.game = new Phaser.Game(
     this.cellSize * 3 + 1,
     this.cellSize * 3 + 1,
@@ -18,6 +22,7 @@ function TickTackToe() {
     Phaser.CANVAS,
     'game-container',
     { create: this.onPhaserCreate.bind(this) });
+
   this.board = new ticktacktoe.Board(this.game, this.cellSize);
 
   // Set up WebSocket.
@@ -55,7 +60,7 @@ TickTackToe.prototype.onPhaserCreate = function() {
 };
 
 /**
- * @param {Point} pointer
+ * @param {!Point} pointer
  * @return {void}
  */
 TickTackToe.prototype.onDown = function(pointer) {
@@ -104,7 +109,8 @@ TickTackToe.prototype.socketError = function(error) {
 };
 
 /**
- * @param {Object} e
+ * MessageEvent type is taken from: https://github.com/google/closure-compiler/blob/2d3da6764e331d72ec347a620251e12e63c15a6e/externs/browser/html5.js
+ * @param {!MessageEvent<string>} e
  */
 TickTackToe.prototype.socketOnmessage = function(e) {
   var b = goog.crypt.base64.decodeStringToUint8Array(e.data);
@@ -130,6 +136,11 @@ TickTackToe.prototype.socketOnmessage = function(e) {
   }
 };
 
+/**
+ * HACK: Without the supression, the code is eliminated.
+ *
+ * @suppress {unusedLocalVariables}
+ */
 (function() {
   var ttt = new TickTackToe();
 })();

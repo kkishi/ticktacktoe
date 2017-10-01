@@ -14,7 +14,7 @@ go_repositories()
 git_repository(
     name = "org_pubref_rules_protobuf",
     remote = "https://github.com/pubref/rules_protobuf",
-    tag = "v0.7.2",
+    tag = "v0.8.1",
 )
 
 load("@org_pubref_rules_protobuf//go:rules.bzl", "go_proto_repositories")
@@ -24,14 +24,6 @@ go_proto_repositories()
 load("@org_pubref_rules_protobuf//grpc_gateway:rules.bzl", "grpc_gateway_proto_repositories")
 
 grpc_gateway_proto_repositories()
-
-# From https://github.com/cgrushko/proto_library/blob/master/WORKSPACE
-http_archive(
-    name = "com_google_protobuf",
-    sha256 = "ff771a662fb6bd4d3cc209bcccedef3e93980a49f71df1e987f6afa3bcdcba3a",
-    strip_prefix = "protobuf-b4b0e304be5a68de3d0ee1af9b286f958750f5e4",
-    urls = ["https://github.com/google/protobuf/archive/b4b0e304be5a68de3d0ee1af9b286f958750f5e4.zip"],
-)
 
 # For gomock
 go_repository(
@@ -86,9 +78,12 @@ go_repository(
 # From https://github.com/bazelbuild/rules_closure
 http_archive(
     name = "io_bazel_rules_closure",
-    strip_prefix = "rules_closure-0.4.1",
-    sha256 = "ba5e2e10cdc4027702f96e9bdc536c6595decafa94847d08ae28c6cb48225124",
-    url = "http://mirror.bazel.build/github.com/bazelbuild/rules_closure/archive/0.4.1.tar.gz",
+    strip_prefix = "rules_closure-0.4.2",
+    sha256 = "25f5399f18d8bf9ce435f85c6bbf671ec4820bc4396b3022cc5dc4bc66303609",
+    urls = [
+        "http://mirror.bazel.build/github.com/bazelbuild/rules_closure/archive/0.4.2.tar.gz",
+        "https://github.com/bazelbuild/rules_closure/archive/0.4.2.tar.gz",
+    ],
 )
 
 load("@io_bazel_rules_closure//closure:defs.bzl", "closure_repositories")

@@ -2,11 +2,11 @@ goog.provide('ticktacktoe.Board');
 goog.require('proto.Player');
 
 /**
+ * @param {!Phaser.Game} game
+ * @param {number} cellSize
  * @constructor
- * @param{Phaser.Game} game
- * @param{number} cellSize
  */
-function Board(game, cellSize) {
+ticktacktoe.Board = function(game, cellSize) {
   this.game = game;
   this.cellSize = cellSize;
   this.cells = [
@@ -14,15 +14,16 @@ function Board(game, cellSize) {
     [false, false, false],
     [false, false, false],
   ];
-}
 
-ticktacktoe.Board = Board;
+  /** @type {?Phaser.BitmapData} */
+  this.canvas = null;
+};
 
 /**
  * @param {proto.Player} player
  * @return {string}
  */
-Board.color = function(player) {
+ticktacktoe.Board.color = function(player) {
   if (player == proto.Player.A) {
     return 'blue';
   }
@@ -34,9 +35,10 @@ Board.color = function(player) {
 };
 
 /**
+ * @this {ticktacktoe.Board}
  * @return {void}
  */
-Board.prototype.onPhaserCreate = function() {
+ticktacktoe.Board.prototype.onPhaserCreate = function() {
   // Add a grid board to the UI.
   this.game.create.grid('board',
                         this.cellSize * 3 + 1,
@@ -57,7 +59,7 @@ Board.prototype.onPhaserCreate = function() {
  * @param {number} col
  * @return {boolean}
  */
-Board.prototype.canTake = function(row, col) {
+ticktacktoe.Board.prototype.canTake = function(row, col) {
   return !this.cells[row][col];
 };
 
@@ -67,9 +69,9 @@ Board.prototype.canTake = function(row, col) {
  * @param {proto.Player} player
  * @return {void}
  */
-Board.prototype.update = function(row, col, player) {
+ticktacktoe.Board.prototype.update = function(row, col, player) {
   this.cells[row][col] = true;
-  this.mark(row, col, Board.color(player));
+  this.mark(row, col, ticktacktoe.Board.color(player));
 };
 
 
@@ -79,7 +81,7 @@ Board.prototype.update = function(row, col, player) {
  * @param {string} color
  * @return {void}
  */
-Board.prototype.mark = function(row, col, color) {
+ticktacktoe.Board.prototype.mark = function(row, col, color) {
   this.canvas.circle((col + 0.5) * this.cellSize,
                      (row + 0.5) * this.cellSize,
                      0.4 * this.cellSize,
