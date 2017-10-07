@@ -42,8 +42,11 @@ ticktacktoe.Board.prototype.onPhaserCreate = function() {
                         this.cellSize * 3 + 1,
                         this.cellSize,
                         this.cellSize,
-                        '#000000');
-  this.game.add.sprite(0, 0, 'board');
+                        '#000000',
+                        true,
+                        (function() {
+                          this.game.add.sprite(0, 0, 'board');
+                        }).bind(this));
 
   // Setup bitmap, used for marking the board.
   this.canvas = this.game.make.bitmapData(this.cellSize * 3,

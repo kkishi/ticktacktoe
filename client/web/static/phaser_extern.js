@@ -37,7 +37,7 @@ Phaser.GameObjectFactory.prototype.sprite = function(a, b, c) {};
 Phaser.Create = function() {}
 
 /** @return {void} */
-Phaser.Create.prototype.grid = function(a, b, c, d, e, f) {};
+Phaser.Create.prototype.grid = function(a, b, c, d, e, f, g, h) {};
 
 /** @constructor */
 Phaser.Input = function() {
