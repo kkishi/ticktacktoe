@@ -9,6 +9,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//proto/ticktacktoe_proto:go_default_library",
+        "//server/client:go_default_library",
         "//server/game:go_default_library",
         "@org_golang_google_grpc//:go_default_library",
         "@org_golang_google_grpc//reflection:go_default_library",

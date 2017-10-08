@@ -8,6 +8,7 @@ go_library(
         "//model/board:go_default_library",
         "//model/player:go_default_library",
         "//proto/ticktacktoe_proto:go_default_library",
+        "//server/client:go_default_library",
     ],
 )
 
@@ -19,6 +20,7 @@ go_test(
         "//model/player:go_default_library",
         "//proto/mock_ticktacktoe_proto:go_default_library",
         "//proto/ticktacktoe_proto:go_default_library",
+        "//server/client:go_default_library",
         "@com_github_golang_mock//gomock:go_default_library",
     ],
 )

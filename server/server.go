@@ -4,18 +4,19 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/kkishi/ticktacktoe/server/client"
 	"github.com/kkishi/ticktacktoe/server/game"
 
 	tpb "github.com/kkishi/ticktacktoe/proto/ticktacktoe_proto"
 )
 
 type Server struct {
-	ch chan tpb.TickTackToe_GameServer
+	ch chan *client.Client
 }
 
 func NewServer() *Server {
 	s := &Server{
-		ch: make(chan tpb.TickTackToe_GameServer),
+		ch: make(chan *client.Client),
 	}
 	go s.SpawnGames()
 	return s
@@ -28,9 +29,9 @@ func (s *Server) SpawnGames() {
 	loop:
 		for {
 			select {
-			case <-a.Context().Done():
+			case <-a.Context.Done():
 				a = <-s.ch
-			case <-b.Context().Done():
+			case <-b.Context.Done():
 				b = <-s.ch
 			default:
 				break loop
@@ -52,8 +53,9 @@ func (s *Server) Game(stream tpb.TickTackToe_GameServer) error {
 	}); err != nil {
 		return fmt.Errorf("error while sending an info: %v", err)
 	}
-	s.ch <- stream
-	<-stream.Context().Done()
+	c := client.New(stream)
+	s.ch <- c
+	<-c.Context.Done()
 	log.Print("a Game connection closed")
 	return nil
 }

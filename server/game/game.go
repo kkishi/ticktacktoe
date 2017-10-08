@@ -6,46 +6,48 @@ import (
 
 	"github.com/kkishi/ticktacktoe/model/board"
 	"github.com/kkishi/ticktacktoe/model/player"
+	"github.com/kkishi/ticktacktoe/server/client"
 
 	tpb "github.com/kkishi/ticktacktoe/proto/ticktacktoe_proto"
 )
 
 type Game struct {
 	Board   board.Board
-	Streams []tpb.TickTackToe_GameServer
+	Clients []*client.Client
 	Names   []string
 }
 
-func New(a, b tpb.TickTackToe_GameServer) *Game {
+func New(a, b *client.Client) *Game {
 	return &Game{
-		Streams: []tpb.TickTackToe_GameServer{a, b},
+		Clients: []*client.Client{a, b},
 	}
 }
 
 func (g *Game) Start() {
 	log.Print("game started")
+	defer g.Close()
 
 	for i := 0; i < 2; i++ {
 		if err := g.initPlayer(i); err != nil {
-			g.Finish(err)
+			g.Error(err)
 			return
 		}
 	}
 
 	for i := 0; ; i = 1 - i {
-		if err := g.Streams[1-i].Send(&tpb.Response{
+		if err := g.Clients[1-i].Stream.Send(&tpb.Response{
 			Event: &tpb.Response_Info{
 				&tpb.Message{
 					Text: "Waiting for the opponent to make a move.",
 				},
 			},
 		}); err != nil {
-			g.Finish(fmt.Errorf("error while sending an info to player %v; %v",
+			g.Error(fmt.Errorf("error while sending an info to player %v; %v",
 				player.FromIndex(1-i), err))
 			return
 		}
 		if err := g.makeMove(i); err != nil {
-			g.Finish(err)
+			g.Error(err)
 			return
 		}
 		if finished, winningPlayer := g.Board.Finished(); finished {
@@ -55,7 +57,7 @@ func (g *Game) Start() {
 				log.Printf("player %v wins game", winningPlayer)
 			}
 			// Notify clients that the game has finished.
-			for i, stream := range g.Streams {
+			for i, c := range g.Clients {
 				var r tpb.Finish_Result
 				if winningPlayer == player.Unknown {
 					r = tpb.Finish_DRAW
@@ -64,7 +66,7 @@ func (g *Game) Start() {
 				} else {
 					r = tpb.Finish_LOSE
 				}
-				if err := stream.Send(&tpb.Response{
+				if err := c.Stream.Send(&tpb.Response{
 					Event: &tpb.Response_Finish{
 						Finish: &tpb.Finish{
 							Result: r,
@@ -80,10 +82,16 @@ func (g *Game) Start() {
 	}
 }
 
+func (g *Game) Close() {
+	for _, c := range g.Clients {
+		c.Cancel()
+	}
+}
+
 func (g *Game) initPlayer(i int) error {
 	p := player.FromIndex(i)
 
-	r, err := g.Streams[i].Recv()
+	r, err := g.Clients[i].Stream.Recv()
 	if err != nil {
 		return fmt.Errorf("error while waiting for a join request from player %v; %v", p, err)
 	}
@@ -94,7 +102,7 @@ func (g *Game) initPlayer(i int) error {
 	g.Names = append(g.Names, j.GetName())
 	log.Printf("player %v joind: %v", p, r)
 
-	if err := g.Streams[i].Send(&tpb.Response{
+	if err := g.Clients[i].Stream.Send(&tpb.Response{
 		Event: &tpb.Response_Info{
 			&tpb.Message{
 				Text: "Game is started.",
@@ -104,14 +112,14 @@ func (g *Game) initPlayer(i int) error {
 		return fmt.Errorf("error while sending an info for a player %v: %v", p, err)
 	}
 	g.Board.AddObserver(&boardObserver{
-		stream: g.Streams[i],
+		stream: g.Clients[i].Stream,
 	})
 	return nil
 }
 
 func (g *Game) makeMove(i int) error {
 	p := player.FromIndex(i)
-	if err := g.Streams[i].Send(&tpb.Response{
+	if err := g.Clients[i].Stream.Send(&tpb.Response{
 		Event: &tpb.Response_MakeMove{
 			MakeMove: &tpb.MakeMove{},
 		},
@@ -119,7 +127,7 @@ func (g *Game) makeMove(i int) error {
 		return fmt.Errorf("error while sending make move response to player %v; %v", p, err)
 	}
 
-	r, err := g.Streams[i].Recv()
+	r, err := g.Clients[i].Stream.Recv()
 	if err != nil {
 		return fmt.Errorf("error while waiting for move request from player %v: %v", p, err)
 	}
@@ -135,9 +143,9 @@ func (g *Game) makeMove(i int) error {
 	return nil
 }
 
-func (g *Game) Finish(err error) {
+func (g *Game) Error(err error) {
 	for i := 0; i < 2; i++ {
-		if err := g.Streams[i].Send(&tpb.Response{
+		if err := g.Clients[i].Stream.Send(&tpb.Response{
 			Event: &tpb.Response_Finish{
 				Finish: &tpb.Finish{
 					Result: tpb.Finish_ERROR,
