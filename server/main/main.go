@@ -19,7 +19,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
-	tpb.RegisterTickTackToeServer(s, &server.Impl{})
+	tpb.RegisterTickTackToeServer(s, server.New())
 	// Register reflection service on gRPC server.
 	reflection.Register(s)
 	if err := s.Serve(l); err != nil {

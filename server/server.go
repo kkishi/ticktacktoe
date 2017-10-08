@@ -2,7 +2,6 @@ package server
 
 import (
 	"log"
-	"sync"
 
 	"github.com/kkishi/ticktacktoe/game"
 
@@ -10,36 +9,43 @@ import (
 )
 
 type Impl struct {
-	games      []*game.Game
-	gamesMutex sync.Mutex
+	ch chan tpb.TickTackToe_GameServer
 }
 
-func (i *Impl) Join(stream tpb.TickTackToe_GameServer) *game.Game {
-	i.gamesMutex.Lock()
-	defer i.gamesMutex.Unlock()
-	var g *game.Game
-	for _, ga := range i.games {
-		if ga.Waiting() {
-			g = ga
-			break
+func New() *Impl {
+	i := &Impl{
+		ch: make(chan tpb.TickTackToe_GameServer),
+	}
+	go i.SpawnGames()
+	return i
+}
+
+func (i *Impl) SpawnGames() {
+	for {
+		a := <-i.ch
+		b := <-i.ch
+	loop:
+		for {
+			select {
+			case <-a.Context().Done():
+				a = <-i.ch
+			case <-b.Context().Done():
+				b = <-i.ch
+			default:
+				break loop
+			}
 		}
+		g := game.New()
+		g.Join(a)
+		g.Join(b)
+		go g.Start()
 	}
-	if g == nil {
-		g = game.New()
-		i.games = append(i.games, g)
-	}
-	g.Join(stream)
-	return g
 }
 
 func (i *Impl) Game(stream tpb.TickTackToe_GameServer) error {
-	g := i.Join(stream)
-	log.Print("a player join to a game")
-	if !g.Waiting() {
-		go g.Start()
-	}
-	g.Cond.L.Lock()
-	defer g.Cond.L.Unlock()
-	g.Cond.Wait()
+	log.Print("new Game connection")
+	i.ch <- stream
+	<-stream.Context().Done()
+	log.Print("a Game connection closed")
 	return nil
 }
