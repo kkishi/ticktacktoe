@@ -20,3 +20,13 @@ func New(stream tpb.TickTackToe_GameServer) *Client {
 		Stream:  stream,
 	}
 }
+
+func (c *Client) Info(text string) error {
+	return c.Stream.Send(&tpb.Response{
+		Event: &tpb.Response_Info{
+			&tpb.Message{
+				Text: text,
+			},
+		},
+	})
+}

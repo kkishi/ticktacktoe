@@ -44,16 +44,10 @@ func (s *Server) SpawnGames() {
 
 func (s *Server) Game(stream tpb.TickTackToe_GameServer) error {
 	log.Print("new Game connection")
-	if err := stream.Send(&tpb.Response{
-		Event: &tpb.Response_Info{
-			&tpb.Message{
-				Text: "Waiting for a game to start.",
-			},
-		},
-	}); err != nil {
+	c := client.New(stream)
+	if err := c.Info("Waiting for a game to start."); err != nil {
 		return fmt.Errorf("error while sending an info: %v", err)
 	}
-	c := client.New(stream)
 	s.ch <- c
 	<-c.Context.Done()
 	log.Print("a Game connection closed")

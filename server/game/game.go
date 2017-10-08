@@ -35,13 +35,7 @@ func (g *Game) Start() {
 	}
 
 	for i := 0; ; i = 1 - i {
-		if err := g.Clients[1-i].Stream.Send(&tpb.Response{
-			Event: &tpb.Response_Info{
-				&tpb.Message{
-					Text: "Waiting for the opponent to make a move.",
-				},
-			},
-		}); err != nil {
+		if err := g.Clients[1-i].Info("Waiting for the opponent to make a move."); err != nil {
 			g.Error(fmt.Errorf("error while sending an info to player %v; %v",
 				player.FromIndex(1-i), err))
 			return
@@ -102,13 +96,7 @@ func (g *Game) initPlayer(i int) error {
 	g.Names = append(g.Names, j.GetName())
 	log.Printf("player %v joind: %v", p, r)
 
-	if err := g.Clients[i].Stream.Send(&tpb.Response{
-		Event: &tpb.Response_Info{
-			&tpb.Message{
-				Text: "Game is started.",
-			},
-		},
-	}); err != nil {
+	if err := g.Clients[i].Info("Game is started."); err != nil {
 		return fmt.Errorf("error while sending an info for a player %v: %v", p, err)
 	}
 	g.Board.AddObserver(&boardObserver{
