@@ -1,17 +1,18 @@
-package client
+package main
 
 import (
 	"errors"
 	"fmt"
 	"log"
 
-	"github.com/kkishi/ticktacktoe/game"
+	"github.com/kkishi/ticktacktoe/model/board"
+	"github.com/kkishi/ticktacktoe/model/player"
 
 	tpb "github.com/kkishi/ticktacktoe/proto/ticktacktoe_proto"
 )
 
 type Game struct {
-	Board  game.Board
+	Board  board.Board
 	Stream tpb.TickTackToe_GameClient
 }
 
@@ -44,6 +45,10 @@ func (g *Game) Wait() error {
 			g.Close()
 			return fmt.Errorf("error while waiting for a response; %v", err)
 		}
+		if i := r.GetInfo(); i != nil {
+			log.Printf("info: %q", i.GetText())
+			continue
+		}
 		if f := r.GetFinish(); f != nil {
 			g.Close()
 			log.Printf("game has finished; %v", f)
@@ -54,7 +59,7 @@ func (g *Game) Wait() error {
 		}
 		if u := r.GetUpdate(); u != nil {
 			if err := g.Board.Take(int(u.GetRow()), int(u.GetCol()),
-				game.Player(u.GetPlayer())); err != nil {
+				player.Player(u.GetPlayer())); err != nil {
 				return fmt.Errorf("invalid move (%d, %d) returned from server; %v",
 					u.GetRow(), u.GetCol(), err)
 			}

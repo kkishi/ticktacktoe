@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/kkishi/ticktacktoe/model/board"
+	"github.com/kkishi/ticktacktoe/model/player"
+
 	tpb "github.com/kkishi/ticktacktoe/proto/ticktacktoe_proto"
 )
 
 type Game struct {
-	Board   Board
+	Board   board.Board
 	Streams []tpb.TickTackToe_GameServer
 	Names   []string
 }
@@ -38,7 +41,7 @@ func (g *Game) Start() {
 			},
 		}); err != nil {
 			g.Finish(fmt.Errorf("error while sending an info to player %v; %v",
-				PlayerFromIndex(1-i), err))
+				player.FromIndex(1-i), err))
 			return
 		}
 		if err := g.makeMove(i); err != nil {
@@ -46,7 +49,7 @@ func (g *Game) Start() {
 			return
 		}
 		if finished, winningPlayer := g.Board.Finished(); finished {
-			if winningPlayer == UnknownPlayer {
+			if winningPlayer == player.Unknown {
 				log.Print("draw")
 			} else {
 				log.Printf("player %v wins game", winningPlayer)
@@ -54,9 +57,9 @@ func (g *Game) Start() {
 			// Notify clients that the game has finished.
 			for i, stream := range g.Streams {
 				var r tpb.Finish_Result
-				if winningPlayer == UnknownPlayer {
+				if winningPlayer == player.Unknown {
 					r = tpb.Finish_DRAW
-				} else if PlayerFromIndex(i) == winningPlayer {
+				} else if player.FromIndex(i) == winningPlayer {
 					r = tpb.Finish_WIN
 				} else {
 					r = tpb.Finish_LOSE
@@ -69,7 +72,7 @@ func (g *Game) Start() {
 					},
 				}); err != nil {
 					// Not much we can do here; just log the fact.
-					log.Printf("error while sending a finish response to player %v; %v", PlayerFromIndex(i), err)
+					log.Printf("error while sending a finish response to player %v; %v", player.FromIndex(i), err)
 				}
 			}
 			return
@@ -78,7 +81,7 @@ func (g *Game) Start() {
 }
 
 func (g *Game) initPlayer(i int) error {
-	p := PlayerFromIndex(i)
+	p := player.FromIndex(i)
 
 	r, err := g.Streams[i].Recv()
 	if err != nil {
@@ -107,7 +110,7 @@ func (g *Game) initPlayer(i int) error {
 }
 
 func (g *Game) makeMove(i int) error {
-	p := PlayerFromIndex(i)
+	p := player.FromIndex(i)
 	if err := g.Streams[i].Send(&tpb.Response{
 		Event: &tpb.Response_MakeMove{
 			MakeMove: &tpb.MakeMove{},
@@ -142,7 +145,7 @@ func (g *Game) Finish(err error) {
 			},
 		}); err != nil {
 			// Not much we can do here; just log the fact.
-			log.Printf("error while sending an error finish response to player %v; %v", PlayerFromIndex(i), err)
+			log.Printf("error while sending an error finish response to player %v; %v", player.FromIndex(i), err)
 		}
 	}
 }
@@ -151,7 +154,7 @@ type boardObserver struct {
 	stream tpb.TickTackToe_GameServer
 }
 
-func (o *boardObserver) NotifyUpdate(row, col int, player Player) error {
+func (o *boardObserver) NotifyUpdate(row, col int, player player.Player) error {
 	if err := o.stream.Send(&tpb.Response{
 		Event: &tpb.Response_Update{
 			&tpb.Update{

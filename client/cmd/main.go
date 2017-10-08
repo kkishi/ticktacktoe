@@ -7,9 +7,9 @@ import (
 	"io"
 	"log"
 
+	"github.com/kkishi/ticktacktoe/model/player"
 	"google.golang.org/grpc"
 
-	"github.com/kkishi/ticktacktoe/client"
 	tpb "github.com/kkishi/ticktacktoe/proto/ticktacktoe_proto"
 )
 
@@ -34,7 +34,7 @@ func main() {
 		log.Fatalf("failed to connect to the server: %v", err)
 	}
 
-	g := client.NewGame(stream)
+	g := NewGame(stream)
 	defer g.Close()
 
 	if err := g.Join(*name); err != nil {
@@ -43,12 +43,17 @@ func main() {
 	log.Print("joined to a game")
 
 	for {
-		if err := g.Wait(); err == client.ErrGameIsFinished {
-			finished, player := g.Board.Finished()
+		if err := g.Wait(); err == ErrGameIsFinished {
+			finished, p := g.Board.Finished()
 			if !finished {
 				log.Fatal("game is not finished locally")
 			}
-			fmt.Printf("Player %v wins. final board:\n%s\n", player, g.Board.String())
+			if p == player.Unknown {
+				fmt.Print("Draw.")
+			} else {
+				fmt.Printf("Player %v wins.", p)
+			}
+			fmt.Printf(" final board:\n%s\n", g.Board.String())
 			return
 		} else if err != nil {
 			log.Fatalf("game finished with an error; %v", err)

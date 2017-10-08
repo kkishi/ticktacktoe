@@ -4,7 +4,6 @@ import (
 	"log"
 	"net"
 
-	"github.com/kkishi/ticktacktoe/server"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -19,7 +18,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
-	tpb.RegisterTickTackToeServer(s, server.New())
+	tpb.RegisterTickTackToeServer(s, NewServer())
 	// Register reflection service on gRPC server.
 	reflection.Register(s)
 	if err := s.Serve(l); err != nil {

@@ -1,11 +1,11 @@
-package client
+package main
 
 import (
 	"errors"
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/kkishi/ticktacktoe/game"
+	"github.com/kkishi/ticktacktoe/model/player"
 	"github.com/kkishi/ticktacktoe/proto/mock_ticktacktoe_proto"
 
 	tpb "github.com/kkishi/ticktacktoe/proto/ticktacktoe_proto"
@@ -119,8 +119,8 @@ func TestWaitNotFinished(t *testing.T) {
 	if err := g.Wait(); err != nil {
 		t.Errorf("got an error %v from Wait; want no error", err)
 	}
-	if got := g.Board.Grid[1][2]; got != game.PlayerA {
-		t.Errorf("Board.Grid[1][2] is occupied by %v; want %v", got, game.PlayerA)
+	if got := g.Board.Grid[1][2]; got != player.A {
+		t.Errorf("Board.Grid[1][2] is occupied by %v; want %v", got, player.A)
 	}
 }
 

@@ -1,5 +1,5 @@
-package server
+package main
 
 import tpb "github.com/kkishi/ticktacktoe/proto/ticktacktoe_proto"
 
-var _ tpb.TickTackToeServer = (*Impl)(nil)
+var _ tpb.TickTackToeServer = (*Server)(nil)

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/kkishi/ticktacktoe/model/player"
 	"github.com/kkishi/ticktacktoe/proto/mock_ticktacktoe_proto"
 
 	tpb "github.com/kkishi/ticktacktoe/proto/ticktacktoe_proto"
@@ -82,11 +83,11 @@ func TestJoin(t *testing.T) {
 	g := New(sa, sb)
 	g.Start()
 
-	if got := g.Names[PlayerA.ToIndex()]; got != nameA {
-		t.Errorf("Got %q for the name of PlayerA; want %q", got, nameA)
+	if got := g.Names[player.A.ToIndex()]; got != nameA {
+		t.Errorf("Got %q for the name of Player A; want %q", got, nameA)
 	}
-	if got := g.Names[PlayerB.ToIndex()]; got != nameB {
-		t.Errorf("Got %q for the name of PlayerB; want %q", got, nameB)
+	if got := g.Names[player.B.ToIndex()]; got != nameB {
+		t.Errorf("Got %q for the name of Player B; want %q", got, nameB)
 	}
 }
 
@@ -104,13 +105,13 @@ func TestMove(t *testing.T) {
 				},
 			},
 		}, (error)(nil)),
-		// Let PlayerA make the first move.
+		// Let Player A make the first move.
 		sa.EXPECT().Send(&tpb.Response{
 			Event: &tpb.Response_MakeMove{
 				MakeMove: &tpb.MakeMove{},
 			},
 		}).Return((error)(nil)),
-		// PlayerA takes (0,0).
+		// Player A takes (0,0).
 		sa.EXPECT().Recv().Return(&tpb.Request{
 			Event: &tpb.Request_Move{
 				Move: &tpb.Move{
@@ -119,7 +120,7 @@ func TestMove(t *testing.T) {
 				},
 			},
 		}, (error)(nil)),
-		// PlayerA gets notification for their own move.
+		// Player A gets notification for their own move.
 		sa.EXPECT().Send(&tpb.Response{
 			Event: &tpb.Response_Update{
 				Update: &tpb.Update{
@@ -129,7 +130,7 @@ func TestMove(t *testing.T) {
 				},
 			},
 		}).Return((error)(nil)),
-		// PlayerA gets notification for PlayerB's move.
+		// Player A gets notification for Player B's move.
 		sa.EXPECT().Send(&tpb.Response{
 			Event: &tpb.Response_Update{
 				Update: &tpb.Update{
@@ -139,7 +140,7 @@ func TestMove(t *testing.T) {
 				},
 			},
 		}).Return((error)(nil)),
-		// Let PlayerA make the second move, then it returns an error, which leads
+		// Let Player A make the second move, then it returns an error, which leads
 		// to the game to finish.
 		sa.EXPECT().Send(&tpb.Response{
 			Event: &tpb.Response_MakeMove{
@@ -169,7 +170,7 @@ func TestMove(t *testing.T) {
 				},
 			},
 		}, (error)(nil)),
-		// PlayerB gets notification for PlayerA's move.
+		// Player B gets notification for Player A's move.
 		sb.EXPECT().Send(&tpb.Response{
 			Event: &tpb.Response_Update{
 				Update: &tpb.Update{
@@ -179,13 +180,13 @@ func TestMove(t *testing.T) {
 				},
 			},
 		}).Return((error)(nil)),
-		// Let PlayerB make the first move.
+		// Let Player B make the first move.
 		sb.EXPECT().Send(&tpb.Response{
 			Event: &tpb.Response_MakeMove{
 				MakeMove: &tpb.MakeMove{},
 			},
 		}).Return((error)(nil)),
-		// PlayerB takes (0,1).
+		// Player B takes (0,1).
 		sb.EXPECT().Recv().Return(&tpb.Request{
 			Event: &tpb.Request_Move{
 				Move: &tpb.Move{
@@ -194,7 +195,7 @@ func TestMove(t *testing.T) {
 				},
 			},
 		}, (error)(nil)),
-		// PlayerB gets notification for their own move.
+		// Player B gets notification for their own move.
 		sb.EXPECT().Send(&tpb.Response{
 			Event: &tpb.Response_Update{
 				Update: &tpb.Update{
@@ -217,39 +218,39 @@ func TestMove(t *testing.T) {
 	g := New(sa, sb)
 	g.Start()
 
-	if got := g.Board.Grid[0][0]; got != PlayerA {
-		t.Errorf("g.Board.Grid[0][0] is takey by %v; want PlayerA", got)
+	if got := g.Board.Grid[0][0]; got != player.A {
+		t.Errorf("g.Board.Grid[0][0] is takey by %v; want Player A", got)
 	}
-	if got := g.Board.Grid[0][1]; got != PlayerB {
-		t.Errorf("g.Board.Grid[0][1] is takey by %v; want PlayerB", got)
+	if got := g.Board.Grid[0][1]; got != player.B {
+		t.Errorf("g.Board.Grid[0][1] is takey by %v; want Player B", got)
 	}
 }
 
 func TestFinish(t *testing.T) {
 	tests := []struct {
 		moves [][]*tpb.Move
-		want  Player
+		want  player.Player
 	}{
 		{
 			moves: [][]*tpb.Move{
 				{{0, 0}, {1, 1}, {2, 2}},
 				{{0, 1}, {0, 2}},
 			},
-			want: PlayerA,
+			want: player.A,
 		},
 		{
 			moves: [][]*tpb.Move{
 				{{0, 0}, {1, 1}, {0, 1}},
 				{{2, 0}, {2, 1}, {2, 2}},
 			},
-			want: PlayerB,
+			want: player.B,
 		},
 		{
 			moves: [][]*tpb.Move{
 				{{0, 0}, {0, 2}, {1, 1}, {1, 2}, {2, 1}},
 				{{0, 1}, {1, 0}, {2, 0}, {2, 2}},
 			},
-			want: UnknownPlayer,
+			want: player.Unknown,
 		},
 	}
 
@@ -267,17 +268,17 @@ func TestFinish(t *testing.T) {
 				servers[i].EXPECT().Recv().Return(&tpb.Request{
 					Event: &tpb.Request_Join{
 						Join: &tpb.Join{
-							Name: fmt.Sprintf("Test %v", PlayerFromIndex(i)),
+							Name: fmt.Sprintf("Test %v", player.FromIndex(i)),
 						},
 					},
 				}, (error)(nil)),
 			})
 		}
 
-		player := PlayerA
+		p := player.A
 		turn := 0
 		for {
-			pi := player.ToIndex()
+			pi := p.ToIndex()
 			moves := test.moves[pi]
 			if len(moves) <= turn {
 				break
@@ -304,25 +305,25 @@ func TestFinish(t *testing.T) {
 						Update: &tpb.Update{
 							Row:    move.Row,
 							Col:    move.Col,
-							Player: tpb.Player(player),
+							Player: tpb.Player(p),
 						},
 					},
 				}).Return((error)(nil)))
 			}
 
-			if player == PlayerA {
-				player = PlayerB
+			if p == player.A {
+				p = player.B
 			} else {
-				player = PlayerA
+				p = player.A
 				turn++
 			}
 		}
 
 		for i := 0; i < 2; i++ {
 			var r tpb.Finish_Result
-			if test.want == UnknownPlayer {
+			if test.want == player.Unknown {
 				r = tpb.Finish_DRAW
-			} else if PlayerFromIndex(i) == test.want {
+			} else if player.FromIndex(i) == test.want {
 				r = tpb.Finish_WIN
 			} else {
 				r = tpb.Finish_LOSE

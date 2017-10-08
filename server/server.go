@@ -1,37 +1,37 @@
-package server
+package main
 
 import (
 	"fmt"
 	"log"
 
-	"github.com/kkishi/ticktacktoe/game"
+	"github.com/kkishi/ticktacktoe/server/game"
 
 	tpb "github.com/kkishi/ticktacktoe/proto/ticktacktoe_proto"
 )
 
-type Impl struct {
+type Server struct {
 	ch chan tpb.TickTackToe_GameServer
 }
 
-func New() *Impl {
-	i := &Impl{
+func NewServer() *Server {
+	s := &Server{
 		ch: make(chan tpb.TickTackToe_GameServer),
 	}
-	go i.SpawnGames()
-	return i
+	go s.SpawnGames()
+	return s
 }
 
-func (i *Impl) SpawnGames() {
+func (s *Server) SpawnGames() {
 	for {
-		a := <-i.ch
-		b := <-i.ch
+		a := <-s.ch
+		b := <-s.ch
 	loop:
 		for {
 			select {
 			case <-a.Context().Done():
-				a = <-i.ch
+				a = <-s.ch
 			case <-b.Context().Done():
-				b = <-i.ch
+				b = <-s.ch
 			default:
 				break loop
 			}
@@ -41,7 +41,7 @@ func (i *Impl) SpawnGames() {
 	}
 }
 
-func (i *Impl) Game(stream tpb.TickTackToe_GameServer) error {
+func (s *Server) Game(stream tpb.TickTackToe_GameServer) error {
 	log.Print("new Game connection")
 	if err := stream.Send(&tpb.Response{
 		Event: &tpb.Response_Info{
@@ -52,7 +52,7 @@ func (i *Impl) Game(stream tpb.TickTackToe_GameServer) error {
 	}); err != nil {
 		return fmt.Errorf("error while sending an info: %v", err)
 	}
-	i.ch <- stream
+	s.ch <- stream
 	<-stream.Context().Done()
 	log.Print("a Game connection closed")
 	return nil
