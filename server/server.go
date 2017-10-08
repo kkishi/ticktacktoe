@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/kkishi/ticktacktoe/game"
@@ -42,6 +43,15 @@ func (i *Impl) SpawnGames() {
 
 func (i *Impl) Game(stream tpb.TickTackToe_GameServer) error {
 	log.Print("new Game connection")
+	if err := stream.Send(&tpb.Response{
+		Event: &tpb.Response_Info{
+			&tpb.Message{
+				Text: "Waiting for a game to start.",
+			},
+		},
+	}); err != nil {
+		return fmt.Errorf("error while sending an info: %v", err)
+	}
 	i.ch <- stream
 	<-stream.Context().Done()
 	log.Print("a Game connection closed")

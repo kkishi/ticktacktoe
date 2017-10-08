@@ -30,6 +30,17 @@ func (g *Game) Start() {
 	}
 
 	for i := 0; ; i = 1 - i {
+		if err := g.Streams[1-i].Send(&tpb.Response{
+			Event: &tpb.Response_Info{
+				&tpb.Message{
+					Text: "Waiting for the opponent to make a move.",
+				},
+			},
+		}); err != nil {
+			g.Finish(fmt.Errorf("error while sending an info to player %v; %v",
+				PlayerFromIndex(1-i), err))
+			return
+		}
 		if err := g.makeMove(i); err != nil {
 			g.Finish(err)
 			return
@@ -68,6 +79,7 @@ func (g *Game) Start() {
 
 func (g *Game) initPlayer(i int) error {
 	p := PlayerFromIndex(i)
+
 	r, err := g.Streams[i].Recv()
 	if err != nil {
 		return fmt.Errorf("error while waiting for a join request from player %v; %v", p, err)
@@ -78,6 +90,16 @@ func (g *Game) initPlayer(i int) error {
 	}
 	g.Names = append(g.Names, j.GetName())
 	log.Printf("player %v joind: %v", p, r)
+
+	if err := g.Streams[i].Send(&tpb.Response{
+		Event: &tpb.Response_Info{
+			&tpb.Message{
+				Text: "Game is started.",
+			},
+		},
+	}); err != nil {
+		return fmt.Errorf("error while sending an info for a player %v: %v", p, err)
+	}
 	g.Board.AddObserver(&boardObserver{
 		stream: g.Streams[i],
 	})

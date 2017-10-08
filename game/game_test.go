@@ -11,6 +11,20 @@ import (
 	tpb "github.com/kkishi/ticktacktoe/proto/ticktacktoe_proto"
 )
 
+type infoMatcher struct {
+}
+
+func (m *infoMatcher) Matches(x interface{}) bool {
+	r, ok := x.(*tpb.Response)
+	return ok && r.GetInfo() != nil
+}
+
+func (m *infoMatcher) String() string {
+	return "InfoMatcher"
+}
+
+var _ gomock.Matcher = (*infoMatcher)(nil)
+
 func TestJoin(t *testing.T) {
 	const (
 		nameA = "Test Player A"
@@ -20,6 +34,7 @@ func TestJoin(t *testing.T) {
 	ca := gomock.NewController(t)
 	defer ca.Finish()
 	sa := mock_ticktacktoe_proto.NewMockTickTackToe_GameServer(ca)
+	sa.EXPECT().Send(&infoMatcher{}).AnyTimes()
 	gomock.InOrder(
 		sa.EXPECT().Recv().Return(&tpb.Request{
 			Event: &tpb.Request_Join{
@@ -46,6 +61,7 @@ func TestJoin(t *testing.T) {
 	cb := gomock.NewController(t)
 	defer cb.Finish()
 	sb := mock_ticktacktoe_proto.NewMockTickTackToe_GameServer(cb)
+	sb.EXPECT().Send(&infoMatcher{}).AnyTimes()
 	gomock.InOrder(
 		sb.EXPECT().Recv().Return(&tpb.Request{
 			Event: &tpb.Request_Join{
@@ -78,6 +94,7 @@ func TestMove(t *testing.T) {
 	ca := gomock.NewController(t)
 	defer ca.Finish()
 	sa := mock_ticktacktoe_proto.NewMockTickTackToe_GameServer(ca)
+	sa.EXPECT().Send(&infoMatcher{}).AnyTimes()
 	gomock.InOrder(
 		// Expect a Join request.
 		sa.EXPECT().Recv().Return(&tpb.Request{
@@ -142,6 +159,7 @@ func TestMove(t *testing.T) {
 	cb := gomock.NewController(t)
 	defer cb.Finish()
 	sb := mock_ticktacktoe_proto.NewMockTickTackToe_GameServer(cb)
+	sb.EXPECT().Send(&infoMatcher{}).AnyTimes()
 	gomock.InOrder(
 		// Expect a Join request.
 		sb.EXPECT().Recv().Return(&tpb.Request{
@@ -244,6 +262,7 @@ func TestFinish(t *testing.T) {
 			ctrls = append(ctrls, gomock.NewController(t))
 			servers = append(servers,
 				mock_ticktacktoe_proto.NewMockTickTackToe_GameServer(ctrls[i]))
+			servers[i].EXPECT().Send(&infoMatcher{}).AnyTimes()
 			calls = append(calls, []*gomock.Call{
 				servers[i].EXPECT().Recv().Return(&tpb.Request{
 					Event: &tpb.Request_Join{

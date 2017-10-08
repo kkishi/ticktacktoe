@@ -106,6 +106,11 @@ TickTackToe.prototype.socketOnmessage = function(e) {
   var b = goog.crypt.base64.decodeStringToUint8Array(e.data);
   var r = proto.Response.deserializeBinary(b.buffer);
   console.log('response', e.data, b, r.toString(), r.toObject());
+  var i = r.getInfo();
+  if (i) {
+    console.log('info', i.getText());
+    return;
+  }
   var f = r.getFinish();
   if (f) {
     this.state = TickTackToe.State.FINISHED;
@@ -122,6 +127,7 @@ TickTackToe.prototype.socketOnmessage = function(e) {
   var mm = r.getMakeMove();
   if (mm) {
     this.state = TickTackToe.State.MAKE_MOVE;
+    console.log('Please make a move.');
     return;
   }
 };
