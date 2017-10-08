@@ -35,9 +35,7 @@ func (i *Impl) SpawnGames() {
 				break loop
 			}
 		}
-		g := game.New()
-		g.Join(a)
-		g.Join(b)
+		g := game.New(a, b)
 		go g.Start()
 	}
 }

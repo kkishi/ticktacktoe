@@ -16,7 +16,6 @@ func TestJoin(t *testing.T) {
 		nameA = "Test Player A"
 		nameB = "Test Player B"
 	)
-	g := New()
 
 	ca := gomock.NewController(t)
 	defer ca.Finish()
@@ -43,7 +42,6 @@ func TestJoin(t *testing.T) {
 			},
 		}).Return((error)(nil)),
 	)
-	g.Join(sa)
 
 	cb := gomock.NewController(t)
 	defer cb.Finish()
@@ -64,8 +62,8 @@ func TestJoin(t *testing.T) {
 			},
 		}).Return((error)(nil)),
 	)
-	g.Join(sb)
 
+	g := New(sa, sb)
 	g.Start()
 
 	if got := g.Names[PlayerA.ToIndex()]; got != nameA {
@@ -76,28 +74,7 @@ func TestJoin(t *testing.T) {
 	}
 }
 
-func TestWaiting(t *testing.T) {
-	g := New()
-	if !g.Waiting() {
-		t.Error("g.Waiting() = false; expected true")
-	}
-	c := gomock.NewController(t)
-	defer c.Finish()
-	s := mock_ticktacktoe_proto.NewMockTickTackToe_GameServer(c)
-	s.EXPECT().Recv().AnyTimes()
-	g.Join(s)
-	if !g.Waiting() {
-		t.Error("g.Waiting() = false; expected true")
-	}
-	g.Join(s)
-	if g.Waiting() {
-		t.Error("g.Waiting() = true; expected false")
-	}
-}
-
 func TestMove(t *testing.T) {
-	g := New()
-
 	ca := gomock.NewController(t)
 	defer ca.Finish()
 	sa := mock_ticktacktoe_proto.NewMockTickTackToe_GameServer(ca)
@@ -161,7 +138,6 @@ func TestMove(t *testing.T) {
 			},
 		}).Return((error)(nil)),
 	)
-	g.Join(sa)
 
 	cb := gomock.NewController(t)
 	defer cb.Finish()
@@ -219,8 +195,8 @@ func TestMove(t *testing.T) {
 			},
 		}).Return((error)(nil)),
 	)
-	g.Join(sb)
 
+	g := New(sa, sb)
 	g.Start()
 
 	if got := g.Board.Grid[0][0]; got != PlayerA {
@@ -260,8 +236,6 @@ func TestFinish(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		g := New()
-
 		var ctrls []*gomock.Controller
 		var servers []*mock_ticktacktoe_proto.MockTickTackToe_GameServer
 		var calls [][]*gomock.Call
@@ -344,9 +318,7 @@ func TestFinish(t *testing.T) {
 			gomock.InOrder(calls[i]...)
 		}
 
-		for i := 0; i < 2; i++ {
-			g.Join(servers[i])
-		}
+		g := New(servers[0], servers[1])
 		g.Start()
 
 		if finished, got := g.Board.Finished(); !finished {
