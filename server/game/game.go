@@ -1,6 +1,7 @@
 package game
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -23,9 +24,31 @@ func New(a, b *client.Client) *Game {
 	}
 }
 
+// ListenDone listens to the Done signals of the clients, which is sent when
+// a client exits the game before it finishes. In that case we notify the fact
+// to the other client and close the game, rather than waiting for another
+// action to be made.
+func (g *Game) ListenDone() {
+	select {
+	case <-g.Clients[0].Context.Done():
+	case <-g.Clients[1].Context.Done():
+	}
+	// TODO: Do not execute below on normal exits (check if both clients are
+	// done).
+	g.Error(errors.New("The opponent is disconnected from the game."))
+	g.Close()
+}
+
 func (g *Game) Start() {
 	log.Print("game started")
+
+	// Close the game before exiting. This makes sure that the server's Game gRPC
+	// request handler can exit regardless of whether the client websocket
+	// connection is closed.
 	defer g.Close()
+
+	// Close the game if a client exits during the game.
+	go g.ListenDone()
 
 	for i := 0; i < 2; i++ {
 		if err := g.initPlayer(i); err != nil {
@@ -77,6 +100,10 @@ func (g *Game) Start() {
 }
 
 func (g *Game) Close() {
+	// Call the CancelFuncs for the clients. This tells the server's Game gRPC
+	// request handler to exit, which closes the client Stream. The subsequent
+	// Recv/Send calls will fail, which makes sure that all Game goroutines to
+	// finish eventually.
 	for _, c := range g.Clients {
 		c.Cancel()
 	}
@@ -133,6 +160,12 @@ func (g *Game) makeMove(i int) error {
 
 func (g *Game) Error(err error) {
 	for i := 0; i < 2; i++ {
+		if err := g.Clients[i].Info(err.Error()); err != nil {
+			// Not much we can do here; just log the fact.
+			log.Printf("error while sending an info to player %v; %v", player.FromIndex(i), err)
+		}
+		// We send a Finish response here, which is an indication that the game has
+		// finished. Clients may close their connections once they receive it.
 		if err := g.Clients[i].Stream.Send(&tpb.Response{
 			Event: &tpb.Response_Finish{
 				Finish: &tpb.Finish{

@@ -59,9 +59,8 @@ message Update {
 message Response {
   oneof event {
     Message info  = 1;
-    Message error = 2;
-    MakeMove make_move = 3;
-    Update update = 4;
-    Finish finish = 5;
+    MakeMove make_move = 2;
+    Update update = 3;
+    Finish finish = 4;
   }
 }
